@@ -7,9 +7,8 @@ from datetime import datetime
 from sqlalchemy import ARRAY, DECIMAL, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from database import Base
 
-
-Base = declarative_base()
 
 class Section(Base):
     __tablename__ = "section"
@@ -19,15 +18,15 @@ class Section(Base):
     title: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     pages: Mapped[list["Page"]] = relationship("Page", back_populates="section", cascade="all, delete-orphan")
-    personnel = Mapped[list["Personnel"]] = relationship("Personnel", back_populates="section", cascade="all, delete-orphan")
+    personnel: Mapped[list["Personnel"]] = relationship("Personnel", back_populates="section", cascade="all, delete-orphan")
 
 class Page(Base):
     __tablename__ = "page"
-    id: Mapped[int] = mapped_column(Integer, unique=true, primary_key=true)
-    section_id: Mapped[int] = mapped_column(Integer, ForeignKey("section.id", ondelete="CASCADE"), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    section_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("section.id", ondelete="CASCADE"), nullable=True)
     slug: Mapped[str] = mapped_column(String(200), unique=True, index=True, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
     markdown_content: Mapped[str] = mapped_column(Text, nullable=False)
 
     section: Mapped["Section | None"] = relationship("Section", back_populates="pages")
@@ -35,18 +34,17 @@ class Page(Base):
 class Personnel(Base):
     __tablename__ = "personnel"
 
-    id: Mapped[int] = mapped_column(Integer, unique=true, primary_key=true)
-    section: Mapped[list["Section"]] = relationship("Section", back_populates="pages")
-    section_id: Mapped[int] = mapped_column(Integer, ForeignKey("section.id", ondelete="CASCADE"), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    section_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("section.id", ondelete="CASCADE"), nullable=True)
     name: Mapped[str] = mapped_column(String(200), index=True, nullable=False)
     designation: Mapped[str] = mapped_column(String(200), nullable=False)
     category: Mapped[str] = mapped_column(String(200), index=True, nullable=False)
-    department: Mapped[str] = mapped_column(String(200), index=True)
-    email: Mapped[str] = mapped_column(String(255))
-    profile_image_url: Mapped[Text] = mapped_column(Text)
-    bio: Mapped[Text] = mapped_column(Text)
+    department: Mapped[str | None] = mapped_column(String(200), index=True, nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    profile_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    sectio: Mapped["Section | None"] = relationship("Section", back_populates="personnel")
+    section: Mapped["Section | None"] = relationship("Section", back_populates="personnel")
 
 class PlacementStats(Base):
     __tablename__ = "placement_stats"
